@@ -35,7 +35,7 @@ module.exports = function(RED) {
                 node.error("failed to open "+node.dbname, err);
                 node.tick = setTimeout(function() { node.doConnect(); }, reconnect);
             });
-        }
+        };
 
         node.on('close', function () {
             if (node.tick) { clearTimeout(node.tick); }
@@ -77,4 +77,4 @@ module.exports = function(RED) {
         }
     }
     RED.nodes.registerType("sqlite",SqliteNodeIn);
-}
+};
