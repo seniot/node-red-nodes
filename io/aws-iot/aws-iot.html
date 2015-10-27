@@ -14,15 +14,15 @@
   limitations under the License.
 -->
 
-<script type="text/x-red" data-template-name="sqlitedb">
+<script type="text/x-red" data-template-name="aws-iotdb">
     <div class="form-row">
         <label for="node-config-input-db"><i class="fa fa-database"></i> Database</label>
-        <input type="text" id="node-config-input-db" placeholder="/tmp/sqlite">
+        <input type="text" id="node-config-input-db" placeholder="/tmp/aws-iot">
     </div>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('sqlitedb',{
+    RED.nodes.registerType('aws-iotdb',{
         category: 'config',
         defaults: {
             db: {value:"",required:true}
@@ -34,7 +34,7 @@
 </script>
 
 
-<script type="text/x-red" data-template-name="sqlite">
+<script type="text/x-red" data-template-name="aws-iot">
     <div class="form-row">
         <label for="node-input-mydb"><i class="fa fa-database"></i> Database</label>
         <input type="text" id="node-input-mydb">
@@ -45,31 +45,31 @@
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="sqlite">
-    <p>Allows basic access to a Sqlite database.</p>
+<script type="text/x-red" data-help-name="aws-iot">
+    <p>Allows basic access to a aws-iot database.</p>
     <p>This node uses the <b>db.all</b> operation against the configured database. This does allow INSERTS, UPDATES and DELETES.
     By it's very nature it is SQL injection... so <i>be careful out there...</i></p>
     <p><b>msg.topic</b> must hold the <i>query</i> for the database, and the result is returned in <b>msg.payload</b>.</p>
     <p><b>msg.payload</b> can contain an array of values to bind to the topic.</p>
     <p>Typically the returned payload will be an array of the result rows, (or an error).</p>
     <p>The reconnect timeout in milliseconds can be changed by adding a line to <b>settings.js</b>
-    <pre>sqliteReconnectTime: 20000,</pre></p>
+    <pre>aws-iotReconnectTime: 20000,</pre></p>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('sqlite',{
+    RED.nodes.registerType('aws-iot',{
         category: 'storage-input',
         color:"#e97b00",
         defaults: {
-            mydb: {type:"sqlitedb",required:true},
+            mydb: {type:"aws-iotdb",required:true},
             name: {value:""}
         },
         inputs:1,
         outputs:1,
-        icon: "sqlite.png",
+        icon: "aws-iot.png",
         label: function() {
             var dbNode = RED.nodes.node(this.mydb);
-            return this.name||(dbNode?dbNode.label():"sqlite");
+            return this.name||(dbNode?dbNode.label():"aws-iot");
         },
             labelStyle: function() {
             return this.name?"node_label_italic":"";
