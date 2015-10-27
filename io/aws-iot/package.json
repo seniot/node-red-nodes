@@ -3,7 +3,7 @@
     "version"       : "0.0.1",
     "description"   : "A aws-iot node for Node-RED",
     "dependencies"  : {
-        "sqlite3"   : "3.0.*"
+        "aws-iot-device-sdk"   : "latest"
     },
     "repository" : {
         "type":"git",
