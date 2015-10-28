@@ -16,75 +16,85 @@
 
 module.exports = function(RED) {
 	"use strict";
-	var reconnect = RED.settings.sqliteReconnectTime || 20000;
-	var sqlite3 = require('sqlite3');
-
-	function SqliteNodeDB(n) {
+	var awsIot = require('aws-iot-device-sdk');
+	var deviceConfig = {
+		"host" : "A26OTSETG4SEYQ.iot.ap-northeast-1.amazonaws.com",
+		"port" : 8883,
+		"clientId" : "Device-001",
+		"caCert" : "root-CA.crt",
+		"clientCert" : "47d4932ed6-certificate.pem.crt",
+		"privateKey" : "47d4932ed6-private.pem.key"
+	};
+	function awsNodeBroker(n) {
 		RED.nodes.createNode(this, n);
 
-		this.dbname = n.db;
+		this.deviceName = n.name;
 		var node = this;
 
-		node.doConnect = function() {
-			node.db = new sqlite3.Database(node.dbname);
-			node.db.on('open', function() {
-				if (node.tick) {
-					clearTimeout(node.tick);
-				}
-				node.log("opened " + node.dbname + " ok");
+		node.connect = function() {
+			node.log("opened " + n.name + " ok");
+			node.device = awsIot.device({
+				keyPath : './awsCerts/47d4932ed6-private.pem.key',
+				certPath : './awsCerts/47d4932ed6-certificate.pem.crt',
+				caPath : './awsCerts/root-CA.crt',
+				clientId : 'Device-001',
+				region : 'ap-northeast-1'
 			});
-			node.db.on('error', function(err) {
-				node.error("failed to open " + node.dbname, err);
-				node.tick = setTimeout(function() {
-					node.doConnect();
-				}, reconnect);
+			node.device.on('connect', function() {
+				node.log('connected.');
+				if (connectedCallback) {
+					connectedCallback();
+				}
 			});
 		};
 
 		node.on('close', function() {
-			if (node.tick) {
-				clearTimeout(node.tick);
-			}
-			if (node.db) {
-				node.db.close();
-			}
+			node.log("closed " + n.name + " ok");
 		});
 	}
 
 
-	RED.nodes.registerType("sqlitedb", SqliteNodeDB);
+	RED.nodes.registerType("aws-iot-device", awsNodeBroker);
 
-	function SqliteNodeIn(n) {
+	function awsMqttNodeIn(n) {
 		RED.nodes.createNode(this, n);
-		this.mydb = n.mydb;
-		this.mydbConfig = RED.nodes.getNode(this.mydb);
+		this.myDevice = n.device;
+		this.awsIot = RED.nodes.getNode(this.myDevice);
 
-		if (this.mydbConfig) {
-			this.mydbConfig.doConnect();
+		if (this.myDeviceConfig) {
 			var node = this;
+			this.awsIot.connect();
 			node.on("input", function(msg) {
-				if ( typeof msg.topic === 'string') {
-					//console.log("query:",msg.topic);
-					var bind = Array.isArray(msg.payload) ? msg.payload : [];
-					node.mydbConfig.db.all(msg.topic, bind, function(err, row) {
-						if (err) {
-							node.error(err, msg);
-						} else {
-							msg.payload = row;
-							node.send(msg);
-						}
-					});
-				} else {
-					if ( typeof msg.topic !== 'string') {
-						node.error("msg.topic : the query is not defined as a string", msg);
-					}
-				}
+				this.awsIot.device.publish(msg.topic, JSON.stringify({
+					data : msg.payload
+				}));
 			});
 		} else {
-			this.error("Sqlite database not configured");
+			this.error("aws-iot is not configured");
 		}
 	}
 
+	RED.nodes.registerType("aws-mqtt in", awsMqttNodeIn);
 
-	RED.nodes.registerType("sqlite", SqliteNodeIn);
+	function awsMqttNodeOut(n) {
+		RED.nodes.createNode(this, n);
+		this.myDevice = n.device;
+		this.awsIot = RED.nodes.getNode(this.myDevice);
+
+		if (this.myDeviceConfig) {
+			var node = this;
+			this.awsIot.connect();
+			this.awsIot.device.on('message', function(topic, payload) {
+				console.log('message', topic, payload.toString());
+				node.send({
+					topic : topic,
+					data : payload.toString()
+				});
+			});
+		} else {
+			this.error("aws-iot is not configured");
+		}
+	}
+
+	RED.nodes.registerType("aws-mqtt out", awsMqttNodeOut);
 };
