@@ -17,17 +17,8 @@
 module.exports = function(RED) {
 	"use strict";
 	var awsIot = require('aws-iot-device-sdk');
-	var deviceConfig = {
-		"host" : "A26OTSETG4SEYQ.iot.ap-northeast-1.amazonaws.com",
-		"port" : 8883,
-		"clientId" : "Device-001",
-		"caCert" : "root-CA.crt",
-		"clientCert" : "47d4932ed6-certificate.pem.crt",
-		"privateKey" : "47d4932ed6-private.pem.key"
-	};
 	function awsNodeBroker(n) {
 		RED.nodes.createNode(this, n);
-
 		this.deviceName = n.name;
 		var node = this;
 
@@ -41,13 +32,28 @@ module.exports = function(RED) {
 				region : n.region
 			});
 			node.device.on('connect', function(connack) {
-				node.log(connack);				
+				node.status({
+						fill : "green",
+						shape : "dot",
+						text : "common.status.connected"
+					});
+				node.log(connack);
 			});
 			node.device.on('error', function(error) {
-				node.error(error);				
+				node.error(error);
+				node.status({
+					fill : "red",
+					shape : "ring",
+					text : "common.status.disconnected"
+				});
 			});
 			node.device.on('offline', function() {
-				node.warn('offline.');				
+				node.status({
+					fill : "yellow",
+					shape : "ring",
+					text : "common.status.disconnected"
+				});
+				node.warn('offline.');
 			});
 		};
 
@@ -77,6 +83,7 @@ module.exports = function(RED) {
 		}
 	}
 
+
 	RED.nodes.registerType("aws-mqtt in", awsMqttNodeIn);
 
 	function awsMqttNodeOut(n) {
@@ -98,6 +105,7 @@ module.exports = function(RED) {
 			this.error("aws-iot is not configured");
 		}
 	}
+
 
 	RED.nodes.registerType("aws-mqtt out", awsMqttNodeOut);
 };
