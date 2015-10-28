@@ -20,21 +20,21 @@ limitations under the License.
 	<input type="text" id="node-config-input-name" placeholder="Device Name" value="Device-001">
 	</div>
 	<div class="form-row">
-	<label for="node-input-client-id"><i class="fa fa-tag"></i> Client ID</label>
-	<input type="text" id="node-input-client-id" placeholder="Client ID" value="Device-001">
+	<label for="node-config-input-clientId"><i class="fa fa-tag"></i> Client ID</label>
+	<input type="text" id="node-config-input-clientId" placeholder="Client ID" value="Device-001">
 	</div>
 	<div class="form-row">
-	<label for="node-input-cert-id"><i class="fa fa-tag"></i> Certificate ID</label>
-	<select type="text" id="node-input-cert-id">		
-		<option value="47d4932ed6">47d4932ed6</option>	
+	<label for="node-config-input-certsId"><i class="fa fa-tag"></i> Certificate ID</label>
+	<select type="text" id="node-config-input-certsId">
+	<option value="47d4932ed6">47d4932ed6</option>
 	</select>
 	</div>
 	<div class="form-row">
-	<label for="node-input-region"><i class="fa fa-tag"></i> Region</label>
-	<select type="text" id="node-input-region">		
-		<option value="ap-northeast-1">ap-northeast-1</option>
-		<option value="eu-west-1">eu-west-1</option>
-	</select>	
+	<label for="node-config-input-region"><i class="fa fa-tag"></i> Region</label>
+	<select type="text" id="node-config-input-region">
+	<option value="ap-northeast-1">ap-northeast-1</option>
+	<option value="eu-west-1">eu-west-1</option>
+	</select>
 	</div>
 </script>
 
@@ -51,10 +51,12 @@ limitations under the License.
 				required : true
 			},
 			certsId : {
-				value : 0
+				value : "47d4932ed6",
+				required : true
 			},
 			region : {
-				value : 0
+				value : "ap-northeast-1",
+				required : true
 			}
 		},
 		label : function() {
@@ -93,9 +95,9 @@ limitations under the License.
 			}
 		},
 		inputs : 1,
-		outputs : 0,		
+		outputs : 0,
 		icon : "bridge.png",
-		align: "right",
+		align : "right",
 		label : function() {
 			var dbNode = RED.nodes.node(this.device);
 			return this.name || ( dbNode ? dbNode.label() : "aws-mqtt");
@@ -134,11 +136,11 @@ limitations under the License.
 			name : {
 				value : ""
 			}
-		},		
+		},
 		inputs : 0,
 		outputs : 1,
 		icon : "bridge.png",
-		align: "left",
+		align : "left",
 		label : function() {
 			var dbNode = RED.nodes.node(this.device);
 			return this.name || ( dbNode ? dbNode.label() : "aws-mqtt");

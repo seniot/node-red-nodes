@@ -32,19 +32,22 @@ module.exports = function(RED) {
 		var node = this;
 
 		node.connect = function() {
-			node.log("opened " + n.name + " ok");
+			node.log("Attemp to connect to " + n.clientId + ", " + n.certsId);
 			node.device = awsIot.device({
-				keyPath : './awsCerts/47d4932ed6-private.pem.key',
-				certPath : './awsCerts/47d4932ed6-certificate.pem.crt',
+				keyPath : './awsCerts/' + n.certsId + '-private.pem.key',
+				certPath : './awsCerts/' + n.certsId + '-certificate.pem.crt',
 				caPath : './awsCerts/root-CA.crt',
-				clientId : 'Device-001',
-				region : 'ap-northeast-1'
+				clientId : n.clientId,
+				region : n.region
 			});
-			node.device.on('connect', function() {
-				node.log('connected.');
-				if (connectedCallback) {
-					connectedCallback();
-				}
+			node.device.on('connect', function(connack) {
+				node.log(connack);				
+			});
+			node.device.on('error', function(error) {
+				node.error(error);				
+			});
+			node.device.on('offline', function() {
+				node.warn('offline.');				
 			});
 		};
 
@@ -61,7 +64,7 @@ module.exports = function(RED) {
 		this.myDevice = n.device;
 		this.awsIot = RED.nodes.getNode(this.myDevice);
 
-		if (this.myDeviceConfig) {
+		if (this.awsIot) {
 			var node = this;
 			this.awsIot.connect();
 			node.on("input", function(msg) {
@@ -81,7 +84,7 @@ module.exports = function(RED) {
 		this.myDevice = n.device;
 		this.awsIot = RED.nodes.getNode(this.myDevice);
 
-		if (this.myDeviceConfig) {
+		if (this.awsIot) {
 			var node = this;
 			this.awsIot.connect();
 			this.awsIot.device.on('message', function(topic, payload) {
