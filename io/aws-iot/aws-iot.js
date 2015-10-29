@@ -16,16 +16,15 @@
 
 module.exports = function(RED) {
 	"use strict";
-	var awsIot = require('aws-iot-device-sdk');
 	function awsNodeBroker(n) {
 		RED.nodes.createNode(this, n);
 		this.deviceName = n.name;
-		var node = this;
+		var self = this;
 
-		node.connect = function() {
-			if (!node.device) {
-				node.log("Attemp to connect to " + n.clientId + ", " + n.certsId);
-				node.device = awsIot.device({
+		this.connect = function() {
+			if (!self.device) {
+				self.log("Attemp to connect to " + n.clientId + ", " + n.certsId);
+				self.device = require('aws-iot-device-sdk').device({
 					keyPath : './awsCerts/' + n.certsId + '-private.pem.key',
 					certPath : './awsCerts/' + n.certsId + '-certificate.pem.crt',
 					caPath : './awsCerts/root-CA.crt',
@@ -35,36 +34,42 @@ module.exports = function(RED) {
 			}
 		};
 
-		node.register = function(_node) {
-			node.device.on('connect', function() {
+		this.register = function(_node) {
+			var onDeviceConnect = function() {
 				_node.status({
 					fill : "green",
 					shape : "dot",
 					text : "common.status.connected"
 				});
-			});
-			node.device.on('reconnect', function() {
+			};
+			var onDeviceReconnect = function() {
 				_node.status({
 					fill : "yellow",
 					shape : "dot",
 					text : "common.status.connecting"
 				});
-			});
-			node.device.on('error', function(error) {
+			};
+			var onDeviceError = function(error) {
 				_node.error(error);
-			});
-			node.device.on('offline', function() {
+			};
+			var onDeviceOffline = function() {
 				_node.status({
 					fill : "red",
 					shape : "dot",
 					text : "common.status.disconnected"
-				});				
-			});
-			node.on('close', function() {
-				node.log("closed " + n.name + " ok");
-			});
+				});
+			};
+			self.device.on('connect', onDeviceConnect);
+			self.device.on('reconnect', onDeviceReconnect);
+			self.device.on('error', onDeviceError);
+			self.device.on('offline', onDeviceOffline);
 		};
+		self.on('close', function() {
+			self.log("closed " + n.name + " ok");
+			self.device.end();
+		});
 	}
+
 
 	RED.nodes.registerType("aws-iot-device", awsNodeBroker);
 
@@ -74,18 +79,19 @@ module.exports = function(RED) {
 		this.awsIot = RED.nodes.getNode(this.myDevice);
 
 		if (this.awsIot) {
-			var node = this;
+			var self = this;
 			this.awsIot.connect();
-			this.awsIot.register(node);
-			node.status({
+			this.awsIot.register(self);
+			self.status({
 				fill : "yellow",
 				shape : "dot",
 				text : "common.status.connecting"
 			});
+			self.log('Subscribe: ' + this.awsIot.name + ", " + n.topic);
 			this.awsIot.device.subscribe(n.topic);
 			this.awsIot.device.on('message', function(topic, payload) {
-				node.log('message: ' + topic + ", " + payload.toString());
-				node.send({
+				self.log('onMessage: ' + topic + ", " + payload.toString());
+				self.send({
 					topic : topic,
 					payload : JSON.parse(payload.toString())
 				});
@@ -112,10 +118,12 @@ module.exports = function(RED) {
 				shape : "dot",
 				text : "common.status.connecting"
 			});
+			var options = {
+				qos : n.qos || 0,
+				retain : n.retain || false
+			};
 			node.on("input", function(msg) {
-				this.awsIot.device.publish(msg.topic, JSON.stringify({
-					data : msg.payload
-				}));
+				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
 			});
 		} else {
 			this.error("aws-iot is not configured");
