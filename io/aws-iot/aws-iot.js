@@ -23,14 +23,24 @@ module.exports = function(RED) {
 
 		this.connect = function() {
 			if (!self.device) {
-				self.log("Attemp to connect to " + n.clientId + ", " + n.certsId);
-				self.device = require('aws-iot-device-sdk').device({
-					keyPath : './awsCerts/' + n.certsId + '-private.pem.key',
-					certPath : './awsCerts/' + n.certsId + '-certificate.pem.crt',
-					caPath : './awsCerts/root-CA.crt',
-					clientId : n.clientId,
-					region : n.region
-				});
+				self.log("Attemp to connect to " + n.mode + " with " + n.clientId + ", " + n.certsId);
+				if (n.mode == "shadow") {
+					self.device = require('aws-iot-device-sdk').thingShadow({
+						keyPath : '../awsCerts/' + n.certsId + '-private.pem.key',
+						certPath : '../awsCerts/' + n.certsId + '-certificate.pem.crt',
+						caPath : '../awsCerts/root-CA.crt',
+						clientId : n.clientId,
+						region : n.region
+					});
+				} else {
+					self.device = require('aws-iot-device-sdk').device({
+						keyPath : '../awsCerts/' + n.certsId + '-private.pem.key',
+						certPath : '../awsCerts/' + n.certsId + '-certificate.pem.crt',
+						caPath : '../awsCerts/root-CA.crt',
+						clientId : n.clientId,
+						region : n.region
+					});
+				}
 			}
 		};
 
@@ -132,4 +142,64 @@ module.exports = function(RED) {
 
 
 	RED.nodes.registerType("aws-mqtt out", awsMqttNodeOut);
+	
+	function awsThingShadowNodeIn(n) {
+		RED.nodes.createNode(this, n);
+		this.myDevice = n.device;
+		this.awsIot = RED.nodes.getNode(this.myDevice);
+
+		if (this.awsIot) {
+			var self = this;
+			this.awsIot.connect();
+			this.awsIot.register(self);
+			self.status({
+				fill : "yellow",
+				shape : "dot",
+				text : "common.status.connecting"
+			});
+			self.log('Subscribe: ' + this.awsIot.name + ", " + n.topic);
+			this.awsIot.device.subscribe(n.topic);
+			this.awsIot.device.on('message', function(topic, payload) {
+				self.log('onMessage: ' + topic + ", " + payload.toString());
+				self.send({
+					topic : topic,
+					payload : JSON.parse(payload.toString())
+				});
+			});
+		} else {
+			this.error("aws-iot is not configured");
+		}
+	}
+
+
+	RED.nodes.registerType("aws-thing in", awsThingShadowNodeIn);
+	
+	function awsThingShadowNodeOut(n) {
+		RED.nodes.createNode(this, n);
+		this.myDevice = n.device;
+		this.awsIot = RED.nodes.getNode(this.myDevice);
+
+		if (this.awsIot) {
+			var node = this;
+			this.awsIot.connect();
+			this.awsIot.register(node);
+			node.status({
+				fill : "yellow",
+				shape : "dot",
+				text : "common.status.connecting"
+			});
+			var options = {
+				qos : n.qos || 0,
+				retain : n.retain || false
+			};
+			node.on("input", function(msg) {
+				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
+			});
+		} else {
+			this.error("aws-iot is not configured");
+		}
+	}
+
+
+	RED.nodes.registerType("aws-thing out", awsThingShadowNodeOut);
 };

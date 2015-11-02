@@ -20,6 +20,13 @@ limitations under the License.
 	<input type="text" id="node-config-input-name" placeholder="Name">
 	</div>
 	<div class="form-row">
+	<label for="node-config-input-mode"><i class="fa fa-tag"></i> Type</label>
+	<select type="text" id="node-config-input-mode">
+	<option value="broker">MQTT Broker</option>
+	<option value="shadow">Thing Shadow</option>	
+	</select>
+	</div>
+	<div class="form-row">
 	<label for="node-config-input-clientId"><i class="fa fa-tag"></i> Client ID</label>
 	<input type="text" id="node-config-input-clientId" placeholder="Client ID">
 	</div>
@@ -39,11 +46,17 @@ limitations under the License.
 	</div>
 </script>
 
+<!-- MQTT Broker Configuration -->
+
 <script type="text/javascript">
 	RED.nodes.registerType('aws-iot-device', {
 		category : 'config',
 		defaults : {
-			name : {
+			name : {				
+				value : "",
+				required : true
+			},
+			mode : {
 				value : "",
 				required : true
 			},
@@ -150,6 +163,99 @@ limitations under the License.
 		label : function() {
 			var dbNode = RED.nodes.node(this.device);
 			return this.name || ( dbNode ? dbNode.label() : "aws-mqtt");
+		},
+		labelStyle : function() {
+			return this.name ? "node_label_italic" : "";
+		}
+	}); 
+</script>
+
+<!-- ThingShadow Configuration -->
+
+<script type="text/x-red" data-template-name="aws-thing out">
+	<div class="form-row">
+	<label for="node-input-device"><i class="fa fa-globe"></i> Device</label>
+	<input type="text" id="node-input-device">
+	</div>
+	<div class="form-row">
+	<label for="node-input-qos"><i class="fa fa-empire"></i> <span data-i18n="mqtt.label.qos"></span></label>
+	<select id="node-input-qos" style="width:125px !important">	
+	<option value="0">0</option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	</select>
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="aws-thing out">
+	<p>Allows basic access to a aws-iot device hub.</p>
+	<p><pre>aws-iotReconnectTime: 20000,</pre></p>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('aws-thing out', {
+		category : 'output',
+		color : "#e97b00",
+		defaults : {
+			device : {
+				type : "aws-iot-device",
+				required : true
+			},
+			qos : {
+				value : "0"
+			}
+		},
+		inputs : 1,
+		outputs : 0,
+		icon : "bridge.png",
+		align : "right",
+		label : function() {
+			var dbNode = RED.nodes.node(this.device);
+			return this.name || ( dbNode ? dbNode.label() : "aws-thing");
+		},
+		labelStyle : function() {
+			return this.name ? "node_label_italic" : "";
+		}
+	}); 
+</script>
+
+<script type="text/x-red" data-template-name="aws-thing in">
+	<div class="form-row">
+	<label for="node-input-device"><i class="fa fa-device"></i> Device</label>
+	<input type="text" id="node-input-device">
+	</div>
+	<div class="form-row">
+	<label for="node-input-topic"><i class="fa fa-tag"></i> Topic</label>
+	<input type="text" id="node-input-topic" placeholder="Topic">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="aws-thing in">
+	<p>Allows basic access to a aws-iot device hub.</p>
+	<p><pre>aws-iotReconnectTime: 20000,</pre></p>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('aws-thing in', {
+		category : 'input',
+		color : "#e97b00",
+		defaults : {
+			device : {
+				type : "aws-iot-device",
+				required : true
+			},
+			topic : {
+				value : "",
+				required : true
+			}
+		},
+		inputs : 0,
+		outputs : 1,
+		icon : "bridge.png",
+		align : "left",
+		label : function() {
+			var dbNode = RED.nodes.node(this.device);
+			return this.name || ( dbNode ? dbNode.label() : "aws-thing");
 		},
 		labelStyle : function() {
 			return this.name ? "node_label_italic" : "";
