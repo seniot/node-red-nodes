@@ -44,7 +44,7 @@ module.exports = function(RED) {
 			}
 		};
 
-		this.register = function(_node) {
+		this.listen = function(_node) {
 			var onDeviceConnect = function() {
 				_node.status({
 					fill : "green",
@@ -91,7 +91,7 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.register(self);
+			this.awsIot.listen(self);
 			self.status({
 				fill : "yellow",
 				shape : "dot",
@@ -120,10 +120,10 @@ module.exports = function(RED) {
 		this.awsIot = RED.nodes.getNode(this.myDevice);
 
 		if (this.awsIot) {
-			var node = this;
+			var self = this;
 			this.awsIot.connect();
-			this.awsIot.register(node);
-			node.status({
+			this.awsIot.listen(self);
+			self.status({
 				fill : "yellow",
 				shape : "dot",
 				text : "common.status.connecting"
@@ -132,7 +132,7 @@ module.exports = function(RED) {
 				qos : n.qos || 0,
 				retain : n.retain || false
 			};
-			node.on("input", function(msg) {
+			self.on("input", function(msg) {
 				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
 			});
 		} else {
@@ -151,7 +151,11 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.register(self);
+			this.awsIot.listen(self);
+			this.awsIot.register(n.name, { 
+				ignoreDeltas: n.ignoreDeltas,
+				persistentSubscribe: n.persistentSubscribe }
+			);
 			self.status({
 				fill : "yellow",
 				shape : "dot",
@@ -180,15 +184,15 @@ module.exports = function(RED) {
 		this.awsIot = RED.nodes.getNode(this.myDevice);
 
 		if (this.awsIot) {
-			var node = this;
+			var self = this;
 			this.awsIot.connect();
-			this.awsIot.register(node);
-			node.status({
+			this.awsIot.listen(self);
+			self.status({
 				fill : "yellow",
 				shape : "dot",
 				text : "common.status.connecting"
 			});
-			node.on("input", function(msg) {
+			self.on("input", function(msg) {
 				
 			});
 		} else {
