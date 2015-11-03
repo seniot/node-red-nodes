@@ -205,31 +205,55 @@ module.exports = function(RED) {
 				shape : "dot",
 				text : "common.status.connecting"
 			});
-			self.log('Register: ' + this.awsIot.name);
+			self.log('Register: ' + this.awsIot.name + ", " + n.method);
 			this.awsIot.device.register(this.awsIot.name, { 
 				ignoreDeltas: true,
 				persistentSubscribe: true }
 			);
 			self.on("input", function(msg) {
-				self.clientToken = this.awsIot.device['update'](this.awsIot.name, msg.payload);
+				if (n.method == 'get')
+					self.clientToken = this.awsIot.device[n.method](this.awsIot.name);
+				else
+					self.clientToken = this.awsIot.device[n.method](this.awsIot.name, msg.payload);
 			});
-			
-			this.awsIot.device.on('status', function(thingName, status, clientToken, stateObject) {
-				self.log('onStatus: ' + thingName + ", clientToken: " + self.clientToken);
+			this.awsIot.device.on('message', function(topic, payload) {
+				self.log('onMessage: ' + topic + ", " + payload.toString());
 				self.send({
-					type: 'status',
+					type: 'message',
+					topic: topic,
+					payload : JSON.parse(payload.toString())
+				});
+			});
+			this.awsIot.device.on('delta', function(thingName, stateObject) {
+		        self.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
+		        self.send({
+					type : 'delta',
 					name : thingName,
-					status: status,
-					token: clientToken,
 					payload : stateObject
 				});
+		     });
+			this.awsIot.device.on('status', function(thingName, status, clientToken, stateObject) {
+				if (self.clientToken == clientToken) {
+					self.log('onStatus: ' + thingName + ", clientToken: " + self.clientToken);
+					self.send([{
+						name : thingName,
+						token: clientToken,
+						payload : {
+							status: status,
+							stateObject : stateObject,
+						}
+					}, null]);	
+				}
 			});
 		     this.awsIot.device.on('timeout', function(thingName, clientToken) {
-		     	self.send({
-					topic : 'timeout',
-					name : thingName,
-					token : clientToken
-				});
+		     	if (self.clientToken == clientToken) {
+			     	self.send([null, {
+						name : thingName,
+						token : clientToken,
+						payload : {
+						}
+					}]);
+				}
 		     });
 		} else {
 			this.error("aws-thing out is not configured");
