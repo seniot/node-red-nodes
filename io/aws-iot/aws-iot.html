@@ -179,10 +179,6 @@ limitations under the License.
 		<label for="node-input-device"><i class="fa fa-globe"></i> Device</label>
 		<input type="text" id="node-input-device">
 	</div>
-	<div class="form-row">
-		<label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-		<input type="text" id="node-input-name" placeholder="Thing name">
-	</div>
 </script>
 
 <script type="text/x-red" data-help-name="aws-thing out">
@@ -199,10 +195,6 @@ limitations under the License.
 		defaults : {
 			device : {
 				type : "aws-iot-device",
-				required : true
-			},
-			name : {
-				value : "",
 				required : true
 			}
 		},
@@ -226,10 +218,6 @@ limitations under the License.
 		<input type="text" id="node-input-device">
 	</div>
 	<div class="form-row">
-		<label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-		<input type="text" id="node-input-name" placeholder="Thing name">
-	</div>
-	<div class="form-row">
 		<input type="checkbox" id="node-input-ignoreDeltas" style="margin-left: 30px; height: 1em;display: inline-block; width: auto; vertical-align: middle;">
 		<label for="node-input-ignoreDeltas" style="width: auto;">Ignore Deltas</label>
 		<input type="checkbox" id="node-input-persistentSubscribe" style="margin-left: 30px; height: 1em;display: inline-block; width: auto; vertical-align: middle;">
@@ -251,10 +239,6 @@ limitations under the License.
 		defaults : {
 			device : {
 				type : "aws-iot-device",
-				required : true
-			},
-			name : {
-				value : "",
 				required : true
 			},
 			ignoreDeltas : {

@@ -152,17 +152,17 @@ module.exports = function(RED) {
 			var self = this;
 			this.awsIot.connect();
 			this.awsIot.listen(self);
-			this.awsIot.register(n.name, { 
-				ignoreDeltas: n.ignoreDeltas,
-				persistentSubscribe: n.persistentSubscribe }
-			);
+			
 			self.status({
 				fill : "yellow",
 				shape : "dot",
 				text : "common.status.connecting"
 			});
-			self.log('Subscribe: ' + this.awsIot.name);
-			
+			self.log('Register: ' + this.awsIot.name);
+			this.awsIot.device.register(this.awsIot.name, { 
+				ignoreDeltas: n.ignoreDeltas,
+				persistentSubscribe: n.persistentSubscribe }
+			);
 			this.awsIot.device.on('message', function(topic, payload) {
 				self.log('onMessage: ' + topic + ", " + payload.toString());
 				self.send({
@@ -170,6 +170,19 @@ module.exports = function(RED) {
 					payload : JSON.parse(payload.toString())
 				});
 			});
+			this.awsIot.device.on('status', function(thingName, stat, clientToken, stateObject) {
+				self.log('onStatus: ' + thingName + ", " + JSON.stringify(stateObject));
+				self.send({
+					name : thingName,
+					stateObject : stateObject
+				});
+			});
+			this.awsIot.on('delta', function(thingName, stateObject) {
+		         console.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
+		         rgbValues=stateObject.state;
+		     });
+		     this.awsIot.on('timeout', function(thingName, clientToken) {
+		     });
 		} else {
 			this.error("aws-thing in is not configured");
 		}
@@ -192,6 +205,11 @@ module.exports = function(RED) {
 				shape : "dot",
 				text : "common.status.connecting"
 			});
+			self.log('Register: ' + this.awsIot.name);
+			this.awsIot.device.register(this.awsIot.name, { 
+				ignoreDeltas: true,
+				persistentSubscribe: true }
+			);
 			self.on("input", function(msg) {
 				
 			});
