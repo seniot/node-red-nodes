@@ -107,7 +107,7 @@ module.exports = function(RED) {
 				});
 			});
 		} else {
-			this.error("aws-iot is not configured");
+			this.error("aws-mqtt in is not configured");
 		}
 	}
 
@@ -136,7 +136,7 @@ module.exports = function(RED) {
 				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
 			});
 		} else {
-			this.error("aws-iot is not configured");
+			this.error("aws-mqtt out is not configured");
 		}
 	}
 
@@ -171,7 +171,7 @@ module.exports = function(RED) {
 				});
 			});
 		} else {
-			this.error("aws-iot is not configured");
+			this.error("aws-thing in is not configured");
 		}
 	}
 
@@ -196,7 +196,7 @@ module.exports = function(RED) {
 				
 			});
 		} else {
-			this.error("aws-iot is not configured");
+			this.error("aws-thing out is not configured");
 		}
 	}
 
