@@ -73,39 +73,6 @@ module.exports = function(RED) {
 			self.device.on('reconnect', onDeviceReconnect);
 			self.device.on('error', onDeviceError);
 			self.device.on('offline', onDeviceOffline);
-			self.device.on('message', function(topic, payload) {
-				self.log('onMessage: ' + topic + ", " + payload.toString());
-				self.send({
-					type: 'message',
-					topic: topic,
-					payload : JSON.parse(payload.toString())
-				});
-			});
-			self.device.on('status', function(thingName, status, clientToken, stateObject) {
-				self.log('onStatus: ' + thingName + ", clientToken: " + _node.clientToken);
-				self.send({
-					type: 'status',
-					name : thingName,
-					status: status,
-					token: clientToken,
-					payload : stateObject
-				});
-			});
-			self.device.on('delta', function(thingName, stateObject) {
-		        self.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
-		        self.send({
-					type : 'delta',
-					name : thingName,
-					payload : stateObject
-				});
-		     });
-		     self.device.on('timeout', function(thingName, clientToken) {
-		     	self.send({
-					topic : 'timeout',
-					name : thingName,
-					token : clientToken
-				});
-		     });
 		};
 		self.on('close', function() {
 			self.log("closed " + n.name + " ok");
@@ -200,7 +167,22 @@ module.exports = function(RED) {
 				ignoreDeltas: n.ignoreDeltas,
 				persistentSubscribe: n.persistentSubscribe }
 			);
-			
+			this.awsIot.device.on('message', function(topic, payload) {
+				self.log('onMessage: ' + topic + ", " + payload.toString());
+				self.send({
+					type: 'message',
+					topic: topic,
+					payload : JSON.parse(payload.toString())
+				});
+			});
+			this.awsIot.device.on('delta', function(thingName, stateObject) {
+		        self.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
+		        self.send({
+					type : 'delta',
+					name : thingName,
+					payload : stateObject
+				});
+		     });
 		} else {
 			this.error("aws-thing in is not configured");
 		}
@@ -231,6 +213,24 @@ module.exports = function(RED) {
 			self.on("input", function(msg) {
 				self.clientToken = this.awsIot.device['update'](this.awsIot.name, msg.payload);
 			});
+			
+			this.awsIot.device.on('status', function(thingName, status, clientToken, stateObject) {
+				self.log('onStatus: ' + thingName + ", clientToken: " + self.clientToken);
+				self.send({
+					type: 'status',
+					name : thingName,
+					status: status,
+					token: clientToken,
+					payload : stateObject
+				});
+			});
+		     this.awsIot.device.on('timeout', function(thingName, clientToken) {
+		     	self.send({
+					topic : 'timeout',
+					name : thingName,
+					token : clientToken
+				});
+		     });
 		} else {
 			this.error("aws-thing out is not configured");
 		}
