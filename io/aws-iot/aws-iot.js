@@ -76,7 +76,11 @@ module.exports = function(RED) {
 		};
 		self.on('close', function() {
 			self.log("closed " + n.name + " ok");
-			self.device.end();
+			if (n.mode == "shadow") {
+				
+			} else {
+				self.device.end();
+			}
 		});
 	}
 
@@ -166,22 +170,35 @@ module.exports = function(RED) {
 			this.awsIot.device.on('message', function(topic, payload) {
 				self.log('onMessage: ' + topic + ", " + payload.toString());
 				self.send({
-					topic : topic,
+					type: 'message',
+					topic: topic,
 					payload : JSON.parse(payload.toString())
 				});
 			});
-			this.awsIot.device.on('status', function(thingName, stat, clientToken, stateObject) {
+			this.awsIot.device.on('status', function(thingName, status, clientToken, stateObject) {
 				self.log('onStatus: ' + thingName + ", " + JSON.stringify(stateObject));
 				self.send({
+					type: 'status',
 					name : thingName,
-					stateObject : stateObject
+					status: status,
+					token: clientToken,
+					payload : stateObject
 				});
 			});
 			this.awsIot.on('delta', function(thingName, stateObject) {
-		         console.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
-		         rgbValues=stateObject.state;
+		        self.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
+		        self.send({
+					type : 'delta',
+					name : thingName,
+					payload : stateObject
+				});
 		     });
 		     this.awsIot.on('timeout', function(thingName, clientToken) {
+		     	self.send({
+					topic : 'timeout',
+					name : thingName,
+					token : clientToken
+				});
 		     });
 		} else {
 			this.error("aws-thing in is not configured");
@@ -211,7 +228,7 @@ module.exports = function(RED) {
 				persistentSubscribe: true }
 			);
 			self.on("input", function(msg) {
-				
+				this.awsIot.device.update(this.awsIot.name, msg.payload);
 			});
 		} else {
 			this.error("aws-thing out is not configured");
