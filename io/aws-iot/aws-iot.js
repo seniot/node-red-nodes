@@ -157,8 +157,8 @@ module.exports = function(RED) {
 				shape : "dot",
 				text : "common.status.connecting"
 			});
-			self.log('Subscribe: ' + this.awsIot.name + ", " + n.topic);
-			this.awsIot.device.subscribe(n.topic);
+			self.log('Subscribe: ' + this.awsIot.name);
+			
 			this.awsIot.device.on('message', function(topic, payload) {
 				self.log('onMessage: ' + topic + ", " + payload.toString());
 				self.send({
@@ -188,12 +188,8 @@ module.exports = function(RED) {
 				shape : "dot",
 				text : "common.status.connecting"
 			});
-			var options = {
-				qos : n.qos || 0,
-				retain : n.retain || false
-			};
 			node.on("input", function(msg) {
-				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
+				
 			});
 		} else {
 			this.error("aws-iot is not configured");
