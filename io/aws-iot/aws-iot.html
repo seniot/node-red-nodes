@@ -174,7 +174,7 @@ limitations under the License.
 
 <!-- ThingShadow Configuration -->
 
-<script type="text/x-red" data-template-name="aws-thing out">
+<script type="text/x-red" data-template-name="aws-thing">
 	<div class="form-row">
 		<label for="node-input-device"><i class="fa fa-globe"></i> Device</label>
 		<input type="text" id="node-input-device">
@@ -189,16 +189,29 @@ limitations under the License.
 	</div>
 </script>
 
-<script type="text/x-red" data-help-name="aws-thing out">
+<script type="text/x-red" data-help-name="aws-thing">
 	<p>A thing shadow (sometimes referred to as a device shadow) is a JSON document that is used to store and retrieve current state information for a thing (device, app, and so on).</p>
 	<p>The Thing Shadows service maintains a thing shadow for each thing you connect to AWS IoT.</p>
 	<p>You can use thing shadows to get and set the state of a thing over MQTT or HTTP, regardless of whether the thing is connected to the Internet.</p>
-	<p>Each thing shadow is uniquely identified by its name. <b>Thing Name</b> that used for Device Shadow MQTT Pub/Sub Messages: <pre>$aws/things/thingName/shadow</pre></p>
+	<p>Each thing shadow is uniquely identified by its name. <b>Thing Name</b> that used for Device Shadow MQTT Pub/Sub Messages:
+		<pre>$aws/things/thingName/shadow/#</pre> 
+	</p>
+	<p>The input pin accepts a <b>msg.payload</b> with JSON format following the structure of AWS ThingShadow document for UPDATE
+		<pre>
+<b>msg.payload</b> = {
+   state: {
+       desired: {
+           color: "RED"
+       }
+   }
+}</pre>
+	</p>
+	<p>Whereas, the two output pins show out the STATUS (pin 1) and the TIMEOUT (pin 2) messages in the <b>msg.payload</b></p>
 </script>
 
 <script type="text/javascript">
-	RED.nodes.registerType('aws-thing out', {
-		category : 'output',
+	RED.nodes.registerType('aws-thing', {
+		category : 'function',
 		color : "#e97b00",
 		defaults : {
 			device : {
@@ -216,57 +229,7 @@ limitations under the License.
 		align : "right",
 		label : function() {
 			var dbNode = RED.nodes.node(this.device);
-			return "[" + this.method + "]" + ( dbNode ? dbNode.label() : "aws-thing");
-		},
-		labelStyle : function() {
-			return this.name ? "node_label_italic" : "";
-		}
-	}); 
-</script>
-
-<script type="text/x-red" data-template-name="aws-thing in">
-	<div class="form-row">
-		<label for="node-input-device"><i class="fa fa-device"></i> Device</label>
-		<input type="text" id="node-input-device">
-	</div>
-	<div class="form-row">
-		<input type="checkbox" id="node-input-ignoreDeltas" style="margin-left: 30px; height: 1em;display: inline-block; width: auto; vertical-align: middle;">
-		<label for="node-input-ignoreDeltas" style="width: auto;">Ignore Deltas</label>
-		<input type="checkbox" id="node-input-persistentSubscribe" style="margin-left: 30px; height: 1em;display: inline-block; width: auto; vertical-align: middle;">
-		<label for="node-input-persistentSubscribe" style="width: auto;">Persistent Subscribe</label>
-    </div>
-</script>
-
-<script type="text/x-red" data-help-name="aws-thing in">
-	<p>A thing shadow (sometimes referred to as a device shadow) is a JSON document that is used to store and retrieve current state information for a thing (device, app, and so on).</p>
-	<p>The Thing Shadows service maintains a thing shadow for each thing you connect to AWS IoT.</p>
-	<p>You can use thing shadows to get and set the state of a thing over MQTT or HTTP, regardless of whether the thing is connected to the Internet.</p>
-	<p>Each thing shadow is uniquely identified by its name. <b>Thing Name</b> that used for Device Shadow MQTT Pub/Sub Messages: <pre>$aws/things/thingName/shadow</pre></p>
-</script>
-
-<script type="text/javascript">
-	RED.nodes.registerType('aws-thing in', {
-		category : 'input',
-		color : "#e97b00",
-		defaults : {
-			device : {
-				type : "aws-iot-device",
-				required : true
-			},
-			ignoreDeltas : {
-				value : true
-			},
-			persistentSubscribe : {
-				value : true
-			}
-		},
-		inputs : 0,
-		outputs : 1,
-		icon : "light.png",
-		align : "left",
-		label : function() {
-			var dbNode = RED.nodes.node(this.device);
-			return this.name || ( dbNode ? dbNode.label() : "aws-thing");
+			return "[" + this.method + "] /" + ( dbNode ? dbNode.label() : "aws-thing");
 		},
 		labelStyle : function() {
 			return this.name ? "node_label_italic" : "";

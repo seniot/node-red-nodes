@@ -138,45 +138,7 @@ module.exports = function(RED) {
 
 	RED.nodes.registerType("aws-mqtt out", awsMqttNodeOut);
 	
-	function awsThingShadowNodeIn(n) {
-		RED.nodes.createNode(this, n);
-		this.myDevice = n.device;
-		this.awsIot = RED.nodes.getNode(this.myDevice);
-
-		if (this.awsIot) {
-			var self = this;
-			this.awsIot.connect();
-			this.awsIot.listen(self);			
-			self.log('Register: ' + this.awsIot.name);
-			this.awsIot.device.register(this.awsIot.name, { 
-				ignoreDeltas: n.ignoreDeltas,
-				persistentSubscribe: n.persistentSubscribe }
-			);
-			this.awsIot.device.on('message', function(topic, payload) {
-				self.log('onMessage: ' + topic + ", " + payload.toString());
-				self.send({
-					type: 'message',
-					topic: topic,
-					payload : JSON.parse(payload.toString())
-				});
-			});
-			this.awsIot.device.on('delta', function(thingName, stateObject) {
-		        self.log('onDelta '+ thingName + ': ' + JSON.stringify(stateObject));
-		        self.send({
-					type : 'delta',
-					name : thingName,
-					payload : stateObject
-				});
-		     });
-		} else {
-			this.error("aws-thing in is not configured");
-		}
-	}
-
-
-	RED.nodes.registerType("aws-thing in", awsThingShadowNodeIn);
-	
-	function awsThingShadowNodeOut(n) {
+	function awsThingShadowNodeFunc(n) {
 		RED.nodes.createNode(this, n);
 		this.myDevice = n.device;
 		this.awsIot = RED.nodes.getNode(this.myDevice);
@@ -236,10 +198,10 @@ module.exports = function(RED) {
 				}
 		     });
 		} else {
-			this.error("aws-thing out is not configured");
+			this.error("aws-thing shadow is not configured");
 		}
 	}
 
 
-	RED.nodes.registerType("aws-thing out", awsThingShadowNodeOut);
+	RED.nodes.registerType("aws-thing", awsThingShadowNodeFunc);
 };
