@@ -77,7 +77,8 @@ module.exports = function(RED) {
 		self.on('close', function() {
 			self.log("closed " + n.name + " ok");
 			if (n.mode == "shadow") {
-				
+				self.device.unregister(self.name);
+				self.device.end();
 			} else {
 				self.device.end();
 			}
@@ -95,12 +96,7 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.listen(self);
-			self.status({
-				fill : "yellow",
-				shape : "dot",
-				text : "common.status.connecting"
-			});
+			this.awsIot.listen(self);			
 			self.log('Subscribe: ' + this.awsIot.name + ", " + n.topic);
 			this.awsIot.device.subscribe(n.topic);
 			this.awsIot.device.on('message', function(topic, payload) {
@@ -126,12 +122,7 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.listen(self);
-			self.status({
-				fill : "yellow",
-				shape : "dot",
-				text : "common.status.connecting"
-			});
+			this.awsIot.listen(self);			
 			var options = {
 				qos : n.qos || 0,
 				retain : n.retain || false
@@ -155,13 +146,7 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.listen(self);
-			
-			self.status({
-				fill : "yellow",
-				shape : "dot",
-				text : "common.status.connecting"
-			});
+			this.awsIot.listen(self);			
 			self.log('Register: ' + this.awsIot.name);
 			this.awsIot.device.register(this.awsIot.name, { 
 				ignoreDeltas: n.ignoreDeltas,
@@ -199,12 +184,7 @@ module.exports = function(RED) {
 		if (this.awsIot) {
 			var self = this;
 			this.awsIot.connect();
-			this.awsIot.listen(self);
-			self.status({
-				fill : "yellow",
-				shape : "dot",
-				text : "common.status.connecting"
-			});
+			this.awsIot.listen(self);			
 			self.log('Register: ' + this.awsIot.name + ", " + n.method);
 			this.awsIot.device.register(this.awsIot.name, { 
 				ignoreDeltas: true,
