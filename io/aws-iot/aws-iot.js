@@ -100,10 +100,13 @@ module.exports = function(RED) {
 			self.log('Subscribe: ' + this.awsIot.name + ", " + n.topic);
 			this.awsIot.device.subscribe(n.topic);
 			this.awsIot.device.on('message', function(topic, payload) {
+				if ( typeof payload === "string") {
+					payload = JSON.parse(payload);
+				}
 				self.log('onMessage: ' + topic + ", " + payload.toString());
 				self.send({
 					topic : topic,
-					payload : JSON.parse(payload.toString())
+					payload : payload
 				});
 			});
 		} else {
@@ -128,7 +131,14 @@ module.exports = function(RED) {
 				retain : n.retain || false
 			};
 			self.on("input", function(msg) {
-				this.awsIot.device.publish(msg.topic, JSON.stringify(msg.payload), options);
+				if (!Buffer.isBuffer(msg.payload)) {
+					if ( typeof msg.payload === "object") {
+						msg.payload = JSON.stringify(msg.payload);
+					} else if ( typeof msg.payload !== "string") {
+						msg.payload = "" + msg.payload;
+					}
+				}
+				this.awsIot.device.publish(msg.topic, msg.payload, options);
 			});
 		} else {
 			this.error("aws-mqtt out is not configured");
